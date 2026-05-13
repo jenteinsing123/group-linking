@@ -37,7 +37,9 @@ import {
   Bell,
   CircleDashed,
   AlertCircle,
-  Lightbulb
+  Lightbulb,
+  Home,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -1436,8 +1438,58 @@ const App = () => {
   const progressPercentage = totalTeamsGoalCount > 0 ? Math.min(100, Math.round((totalMappedCount / totalTeamsGoalCount) * 100)) : 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
-      {showOverview ? (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900 flex">
+      {/* Sidebar */}
+      <div className="w-[280px] bg-white border-r border-slate-200 shrink-0 sticky top-0 h-screen overflow-y-auto hidden md:flex flex-col">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-8 cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white shadow-sm">
+                <div className="w-5 h-5 border-2 border-white rounded-full relative">
+                  <div className="w-2.5 h-2.5 bg-white rounded-full absolute -top-1 left-1/2 -translate-x-1/2 z-10" />
+                  <div className="w-4 h-2 bg-white rounded-t-full absolute bottom-0 left-1/2 -translate-x-1/2" />
+                </div>
+              </div>
+              <span className="font-bold text-lg text-slate-900">Coordinator</span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-slate-500" />
+          </div>
+
+          <div className="space-y-1">
+            <button className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors font-semibold text-sm">
+              <Home className="w-5 h-5 text-slate-500" /> Home
+            </button>
+            <div className="w-full text-left">
+              <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-900 font-bold text-sm">
+                <div className="flex items-center gap-4">
+                  <FileText className="w-5 h-5 text-slate-700" /> Surveys
+                </div>
+                <ChevronUp className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="pl-12 pr-4 py-2 space-y-1">
+                <button className="w-full text-left px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors font-semibold text-sm">
+                  All surveys
+                </button>
+                <button className="w-full text-left px-4 py-2.5 rounded-xl bg-teal-100/50 text-slate-900 font-bold text-sm">
+                  Projects
+                </button>
+              </div>
+            </div>
+            <button className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors font-semibold text-sm">
+              <RefreshCw className="w-5 h-5 text-slate-500" /> 360 feedback
+            </button>
+            <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors font-semibold text-sm">
+              <div className="flex items-center gap-4">
+                <Settings className="w-5 h-5 text-slate-500" /> Organization
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-500" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 w-0">
+        {showOverview ? (
         <SurveyOverview 
           onNavigateToLinking={() => setShowOverview(false)} 
           mappedCount={totalMappedCount}
@@ -1511,7 +1563,12 @@ const App = () => {
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8 mt-4">
                 <div className="p-5">
                   <div className="flex justify-between items-end mb-4">
-                    <div><h3 className="text-base font-bold text-slate-900 mb-1">Mapping Progress</h3><p className="text-sm text-slate-500">{totalMappedCount} of {totalTeamsGoalCount} teams handled</p></div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 mb-1">Mapping Progress</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mt-1.5">
+                        <strong className="text-slate-700">{totalMappedCount} teams</strong> are automatically linked to a team from the previous survey. <strong className="text-slate-700">{totalTeamsGoalCount - totalMappedCount} teams</strong> the system is not confident about and manually need to be matched.
+                      </p>
+                    </div>
                     <span className={`text-2xl font-black ${progressPercentage === 100 ? 'text-green-600' : 'text-[#5850EC]'}`}>{progressPercentage}%</span>
                   </div>
                   <div className="w-full bg-[#E5E7EB] rounded-full h-4 overflow-hidden shadow-inner"><motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className={`${progressPercentage === 100 ? 'bg-green-500' : 'bg-[#5850EC]'} h-4 rounded-full`}></motion.div></div>
@@ -2272,6 +2329,7 @@ const App = () => {
           )}
         </AnimatePresence>
       </AnimatePresence>
+      </div>
     </div>
   );
 };
