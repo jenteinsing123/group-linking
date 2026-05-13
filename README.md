@@ -18,3 +18,6 @@ View your app in AI Studio: https://ai.studio/apps/1c19acb1-a29d-41df-8953-fb464
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+
+Link to prototype: https://group-linking.vercel.app/#
