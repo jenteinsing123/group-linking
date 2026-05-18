@@ -1982,7 +1982,7 @@ const App = () => {
                                     <button onClick={() => { setSelectedReviewId(sug.id); setReviewMessage(getConversationalTitle(sug)); setIsModalOpen(true); }} className="text-sm font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-2 group" id={`request-review-${sug.id}`}><UserPlus className="w-4 h-4 group-hover:scale-110" /> Request review</button>
                                     <div className="flex items-center gap-3">
                                       <button onClick={() => handleAction(sug.id, 'rejected')} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer" id={`reject-${sug.id}`}>Don't link</button>
-                                      <button onClick={() => handleAction(sug.id, 'approved')} className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 cursor-pointer" id={`approve-${sug.id}`}><Check className="w-4 h-4" /> {sug.oldTeams.length === 0 ? 'Confirm new team' : 'Confirm mapping'}</button>
+                                      <button onClick={() => handleAction(sug.id, 'approved')} className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 cursor-pointer" id={`approve-${sug.id}`}><Check className="w-4 h-4" /> Confirm</button>
                                     </div>
                                   </div>
                                 )}
@@ -2007,7 +2007,7 @@ const App = () => {
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[100] border border-slate-800">
             <div className="flex items-center gap-3 pr-6 border-r border-slate-700"><div className="w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold shadow-inner">{selectedCardIds.length}</div> <span className="text-sm font-bold">selected</span></div>
             <div className="flex items-center gap-3">
-              <button onClick={() => handleBulkAction('approved')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold shadow-md shadow-indigo-900/50" id="bulk-approve"><Check className="w-4 h-4 inline mr-1" strokeWidth={3} /> Confirm selected</button>
+              <button onClick={() => handleBulkAction('approved')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold shadow-md shadow-indigo-900/50" id="bulk-approve"><Check className="w-4 h-4 inline mr-1" strokeWidth={3} /> Confirm</button>
               <button onClick={() => handleBulkAction('rejected')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold cursor-pointer" id="bulk-reject">Don't link</button>
             </div>
             <button onClick={() => setSelectedCardIds([])} className="p-2 text-slate-400 hover:text-white" id="clear-selection"><X className="w-5 h-5" /></button>
