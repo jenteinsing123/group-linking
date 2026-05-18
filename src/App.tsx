@@ -272,6 +272,32 @@ const baseSuggestions = [
     insight: "Almost the entire original Workplace Services team is now here (78% overlap), so this appears to be a simple name update."
   },
   { 
+    id: 13, 
+    type: 'MERGE', 
+    status: 'auto_linked', 
+    overlap: 94, 
+    structures: ['Functional Structure'], 
+    oldTeams: [
+      { name: 'Office Ops', size: 5 },
+      { name: 'Facility Management', size: 7 }
+    ], 
+    newTeams: [{ name: 'Operations Excellence', size: 12 }],
+    insight: "94% of the original Office Ops and Facility Management teams have been consolidated into Operations Excellence."
+  },
+  { 
+    id: 14, 
+    type: 'SPLIT', 
+    status: 'auto_linked', 
+    overlap: 91, 
+    structures: ['Organizational Structure'], 
+    oldTeams: [{ name: 'Core IT', size: 40 }], 
+    newTeams: [
+      { name: 'Service Desk', size: 18 },
+      { name: 'Cloud Infrastructure', size: 22 }
+    ],
+    insight: "The Core IT department has been officially split into Service Desk and Cloud Infrastructure. 91% members accounted for."
+  },
+  { 
     id: 6, 
     type: 'SPLIT', 
     status: 'pending', 
@@ -301,11 +327,11 @@ const baseSuggestions = [
     id: 8, 
     type: 'MATCH', 
     status: 'pending', 
-    overlap: 62, 
+    overlap: 92, 
     structures: ['Functional Structure'], 
     oldTeams: [{ name: 'Core IT', size: 25 }], 
     newTeams: [{ name: 'IT Infrastructure', size: 28 }],
-    insight: "Moderate overlap detected. Names have changed but core members remain the same."
+    insight: "High confidence match. Almost all Core IT members have moved to the new Infrastructure team."
   },
   { 
     id: 9, 
@@ -324,11 +350,11 @@ const baseSuggestions = [
     id: 10, 
     type: 'MATCH', 
     status: 'pending', 
-    overlap: 55, 
+    overlap: 95, 
     structures: ['Organizational Structure'], 
     oldTeams: [{ name: 'Human Resources', size: 15 }], 
     newTeams: [{ name: 'People Operations', size: 18 }],
-    insight: "Overlap is lower than expected for a name change (55%), but members are statistically identical."
+    insight: "95% member overlap. This is a clear rebranding from Human Resources to People Operations."
   },
   { 
     id: 11, 
@@ -559,7 +585,6 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
             </div>
           </div>
         </div>
-
         {/* Tip Callout inside main dashboard card */}
         {unreviewedCount > 0 && (
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/50 border-t border-amber-100/50 p-5 px-6 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -575,7 +600,7 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
               <div>
                 <h4 className="text-sm font-bold text-slate-900">Tip: Link your surveys to see trends</h4>
                 <p className="text-sm text-slate-600 mt-0.5">
-                  Link your previous surveys to see how results have changed over time. Use the <strong className="text-amber-900">Previous survey links</strong> section under Comparisons below to manage your historical trends and review team mappings.
+                  Link your previous surveys to see how results have changed over time. Use the <strong className="text-amber-900 font-bold">Previous survey links</strong> section under Comparisons below to manage your historical trends and review team mappings.
                 </p>
               </div>
             </div>
@@ -907,7 +932,15 @@ const UnifiedTreeNode = ({ node, level, expandedNodes, toggleNode, searchQuery, 
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('pending'); 
-  const [suggestions, setSuggestions] = useState(baseSuggestions);
+  const [suggestions, setSuggestions] = useState(() => {
+    return baseSuggestions.map(s => {
+      // Auto-link any high-confidence match (>90%)
+      if (s.overlap >= 90 && s.status === 'pending' && s.type !== 'NO_MATCH') {
+        return { ...s, status: 'auto_linked' };
+      }
+      return s;
+    });
+  });
   const [selectedTreeStructure, setSelectedTreeStructure] = useState(structureTypes[0]);
   const [treeDataMap, setTreeDataMap] = useState<Record<string, any>>({
     [structureTypes[0]]: initialTreeData,
@@ -1616,7 +1649,7 @@ const App = () => {
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end border-b border-slate-200 mb-6">
               <div className="flex gap-6">
               {['pending', 'under_review', 'completed'].map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                    <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-xs font-bold uppercase tracking-widest transition-all relative cursor-pointer ${activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
                       {tab === 'pending' ? 'Suggestions' : tab === 'under_review' ? 'Under Review' : 'Linked'} ({getTabCount(tab)})
                       {activeTab === tab && <motion.div layoutId="activeTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full" />}
                     </button>
@@ -1624,7 +1657,7 @@ const App = () => {
                 </div>
                 <div className="flex items-center gap-2 pb-3 z-[90]">
                   <div className="relative">
-                    <button onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all bg-white border-slate-200 text-slate-600" id="filter-dropdown-trigger">
+                    <button onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all bg-white border-slate-200 text-slate-600 cursor-pointer" id="filter-dropdown-trigger">
                       <Filter className="w-3.5 h-3.5" /> 
                       Structure filter 
                       {selectedStructures.length > 0 && <span className="bg-indigo-600 text-white w-4 h-4 rounded-full flex items-center justify-center text-[10px]">{selectedStructures.length}</span>}
@@ -1946,10 +1979,10 @@ const App = () => {
 
                                 {!isCompletedVisual && (
                                   <div className="flex items-center justify-between pt-1 border-t border-slate-50 pt-4">
-                                    <button onClick={() => { setSelectedReviewId(sug.id); setIsModalOpen(true); }} className="text-sm font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-2 group" id={`request-review-${sug.id}`}><UserPlus className="w-4 h-4 group-hover:scale-110" /> Request review</button>
+                                    <button onClick={() => { setSelectedReviewId(sug.id); setReviewMessage(getConversationalTitle(sug)); setIsModalOpen(true); }} className="text-sm font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-2 group" id={`request-review-${sug.id}`}><UserPlus className="w-4 h-4 group-hover:scale-110" /> Request review</button>
                                     <div className="flex items-center gap-3">
-                                      <button onClick={() => handleAction(sug.id, 'rejected')} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50" id={`reject-${sug.id}`}>Don't link</button>
-                                      <button onClick={() => handleAction(sug.id, 'approved')} className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2" id={`approve-${sug.id}`}><Check className="w-4 h-4" /> {sug.oldTeams.length === 0 ? 'Confirm new team' : 'Confirm mapping'}</button>
+                                      <button onClick={() => handleAction(sug.id, 'rejected')} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer" id={`reject-${sug.id}`}>Don't link</button>
+                                      <button onClick={() => handleAction(sug.id, 'approved')} className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 cursor-pointer" id={`approve-${sug.id}`}><Check className="w-4 h-4" /> {sug.oldTeams.length === 0 ? 'Confirm new team' : 'Confirm mapping'}</button>
                                     </div>
                                   </div>
                                 )}
@@ -1975,7 +2008,7 @@ const App = () => {
             <div className="flex items-center gap-3 pr-6 border-r border-slate-700"><div className="w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold shadow-inner">{selectedCardIds.length}</div> <span className="text-sm font-bold">selected</span></div>
             <div className="flex items-center gap-3">
               <button onClick={() => handleBulkAction('approved')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold shadow-md shadow-indigo-900/50" id="bulk-approve"><Check className="w-4 h-4 inline mr-1" strokeWidth={3} /> Confirm selected</button>
-              <button onClick={() => handleBulkAction('rejected')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold" id="bulk-reject">Don't link</button>
+              <button onClick={() => handleBulkAction('rejected')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold cursor-pointer" id="bulk-reject">Don't link</button>
             </div>
             <button onClick={() => setSelectedCardIds([])} className="p-2 text-slate-400 hover:text-white" id="clear-selection"><X className="w-5 h-5" /></button>
           </motion.div>
@@ -2166,114 +2199,95 @@ const App = () => {
         {isModalOpen && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></motion.div>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden p-8">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner"><UserPlus className="w-6 h-6" /></div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 leading-tight">Request Review</h3>
-                    <p className="text-sm text-indigo-600 font-medium">Internal verification</p>
-                  </div>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden">
+              <div className="p-8 pb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Request review</h3>
+                  <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-all" id="close-review-modal"><X className="w-5 h-5" /></button>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-all" id="close-review-modal"><X className="w-6 h-6" /></button>
+                <p className="text-slate-500 text-sm font-medium">Ask a colleague to review this suggestion before confirming.</p>
               </div>
 
-              <div className="mt-2 mb-6">
-                <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                  Ask a colleague to review this suggestion before confirming.
-                </p>
-              </div>
-
-              {selectedReviewId && (() => {
-                const sug = suggestions.find(s => s.id === selectedReviewId);
-                if (!sug) return null;
-                return (
-                  <div className="mb-8 p-5 bg-slate-50/80 rounded-2xl border border-slate-100 shadow-inner">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 space-y-1">
-                        <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Current Team</div>
-                        <div className="text-sm font-black text-slate-800">{sug.newTeams.map((t: any) => t.name).join(', ')}</div>
-                      </div>
-                      <div className="shrink-0 text-slate-300">
-                        <ArrowLeft className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedSurvey}</div>
-                        <div className="text-sm font-black text-slate-500 italic">
-                          {sug.oldTeams.length > 0 ? sug.oldTeams.map((t: any) => t.name).join(', ') : 'Not linked'}
+              <div className="px-8 space-y-8 mt-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Reviewers</label>
+                  <div className="space-y-3">
+                    {selectedManager ? (
+                      <div className="flex items-center gap-3 p-3 bg-emerald-50/30 border border-emerald-100 rounded-2xl group transition-all">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${selectedManager.color}`}>
+                          {selectedManager.first[0]}{selectedManager.last[0]}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-              
-              <div className="space-y-6">
-                <div className="relative">
-                  <label className="block text-sm font-bold text-slate-700 mb-2 pl-1">Assign Reviewer</label>
-                  <div className="min-h-[56px] flex flex-wrap gap-2 p-2 px-3 border border-slate-200 rounded-2xl bg-white shadow-sm items-center cursor-text transition-shadow focus-within:ring-2 focus-within:ring-indigo-500/20" onClick={() => setShowManagerResults(true)}>
-                    <Search className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
-                    {selectedManager && (
-                      <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 pl-1.5 pr-2 py-1 rounded-full text-sm font-bold border border-indigo-100 group/mchip transition-all">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white ${selectedManager.color}`}>{selectedManager.first[0]}{selectedManager.last[0]}</div>
-                        {selectedManager.first} {selectedManager.last}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-900">{selectedManager.first} {selectedManager.last}</span>
+                            <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                              <Check className="w-2.5 h-2.5" /> Auto-filled
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-medium truncate">{selectedManager.role} · Manager of {suggestions.find(s => s.id === selectedReviewId)?.newTeams[0]?.name}</p>
+                        </div>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedManager(null); }}
-                          className="p-0.5 hover:bg-indigo-200 rounded-full text-indigo-400 hover:text-indigo-700 transition-colors"
+                          onClick={() => setSelectedManager(null)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-all"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
-                    )}
-                    <input type="text" value={managerInputValue} onChange={(e) => setManagerInputValue(e.target.value)} onFocus={() => setShowManagerResults(true)} placeholder={!selectedManager ? "Find a manager..." : ""} className="flex-1 min-w-[120px] outline-none text-sm font-medium py-1 bg-transparent" />
-                  </div>
-                  <AnimatePresence>
-                    {showManagerResults && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden p-1.5 max-h-64 overflow-y-auto">
-                        {managersDB.map(m => (
-                          <button key={m.id} onClick={() => { setSelectedManager(m); setShowManagerResults(false); }} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 text-left transition-colors">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${m.color}`}>{m.first[0]}{m.last[0]}</div>
-                            <div className="flex-1"><div className="text-sm font-bold text-slate-900">{m.first} {m.last}</div><div className="text-xs text-slate-500 font-medium">{m.role}</div></div>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  {selectedManager?.id === managersDB[0].id ? (
-                    <p className="mt-2 text-[11px] text-slate-500 pl-1 leading-relaxed animate-in fade-in slide-in-from-top-1 duration-300 flex items-center gap-2">
-                       <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                      Auto-matched for this group in the system because its a local coordinator of this group
-                    </p>
-                  ) : (
-                    <div className="mt-2 pl-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                    ) : (
                       <button 
-                        onClick={() => setSelectedManager(managersDB[0])}
-                        className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 flex items-center gap-2 group/restore"
+                        onClick={() => setShowManagerResults(true)}
+                        className="w-full h-14 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-indigo-600 font-bold text-sm hover:border-indigo-200 hover:bg-slate-50 transition-all"
                       >
-                        <RefreshCw className="w-3 h-3 transition-transform group-hover/restore:rotate-180 duration-500" />
-                        Restore auto-selected manager
+                        <Plus className="w-4 h-4" /> Add reviewer
                       </button>
-                    </div>
-                  )}
+                    )}
+                    
+                    <AnimatePresence>
+                      {showManagerResults && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="p-2 border border-slate-200 rounded-2xl bg-white shadow-xl max-h-48 overflow-y-auto">
+                          {managersDB.map(m => (
+                            <button key={m.id} onClick={() => { setSelectedManager(m); setShowManagerResults(false); }} className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-indigo-50 text-left transition-colors">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${m.color}`}>{m.first[0]}{m.last[0]}</div>
+                              <div className="flex-1"><div className="text-xs font-bold text-slate-900">{m.first} {m.last}</div><div className="text-[10px] text-slate-500 font-medium">{m.role}</div></div>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2 pl-1">Review guidelines (Optional)</label>
-                  <textarea value={reviewMessage} onChange={e => setReviewMessage(e.target.value)} className="w-full text-sm p-4 border border-slate-200 rounded-2xl outline-none min-h-[100px] resize-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-200 transition-all" placeholder="What specifically should they look for?" />
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Optional message</label>
+                  <textarea 
+                    value={reviewMessage} 
+                    onChange={e => setReviewMessage(e.target.value)} 
+                    className="w-full text-sm p-4 border border-slate-200 rounded-2xl outline-none min-h-[120px] resize-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-200 transition-all placeholder:text-slate-300" 
+                    placeholder="Add context or a question (optional)" 
+                  />
+                </div>
+
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-4">
+                  <div className="shrink-0 pt-0.5">
+                    <Eye className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    The reviewer will only see this specific suggestion — not the rest of your linking workspace.
+                  </p>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-start gap-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
-                <div className="bg-white p-1 rounded-md shadow-sm border border-indigo-100">
-                  <Quote className="w-3 h-3 text-indigo-400" />
+              <div className="mt-8 p-8 flex items-center justify-between border-t border-slate-100">
+                <div className="text-sm font-medium text-slate-400">
+                  {selectedManager ? '1 reviewer selected' : 'No reviewer selected'}
                 </div>
-                <p className="text-[11px] text-indigo-700/80 leading-relaxed font-medium">
-                  The reviewer will only see this specific suggestion — not the rest of your linking workspace.
-                </p>
-              </div>
-
-              <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-slate-50">
-                <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors" id="cancel-review">Cancel</button>
-                <button onClick={handleReviewSubmit} className="px-8 py-3 font-bold rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-200 hover:bg-indigo-700 flex items-center gap-2 transition-all active:scale-95" id="send-review-request"><Send className="w-4 h-4" /> Send Request</button>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-all">Cancel</button>
+                  <button onClick={handleReviewSubmit} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50" disabled={!selectedManager}>
+                    <Send className="w-4 h-4 rotate-[-45deg] translate-y-[-1px] translate-x-[1px]" />
+                    Send request
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
