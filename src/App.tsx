@@ -575,16 +575,10 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
               <div>
                 <h4 className="text-sm font-bold text-slate-900">Tip: Link your surveys to see trends</h4>
                 <p className="text-sm text-slate-600 mt-0.5">
-                  Link your previous surveys to see how results have changed over time. We successfully auto-linked <strong className="text-amber-900">{mappedCount} teams</strong>, but <strong className="text-amber-900">{totalCount - mappedCount} teams</strong> still need your manual review.
+                  Link your previous surveys to see how results have changed over time. Use the <strong className="text-amber-900">Previous survey links</strong> section under Comparisons below to manage your historical trends and review team mappings.
                 </p>
               </div>
             </div>
-            <button 
-              onClick={onNavigateToLinking}
-              className="text-sm font-bold text-amber-900 hover:text-amber-950 flex items-center justify-center gap-1.5 transition-colors bg-white px-5 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:shadow hover:border-amber-300 shrink-0"
-            >
-              Review links <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
         )}
       </div>
