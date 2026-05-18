@@ -39,7 +39,8 @@ import {
   AlertCircle,
   Lightbulb,
   Home,
-  Settings
+  Settings,
+  Link
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -470,7 +471,7 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
         {/* Timeline Section */}
         <div className="flex relative items-start h-64">
           {/* Background Zones */}
-          <div className="flex-1 bg-slate-50/50 h-full p-6 border-r border-slate-100 flex flex-col gap-1">
+          <div className="flex-1 bg-white h-full p-6 border-r border-slate-100 flex flex-col gap-1">
              <div className="flex items-center gap-2 text-slate-500 font-bold text-sm mb-4">
                <CircleDashed className="w-4 h-4" /> Planned
              </div>
@@ -561,21 +562,26 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
 
         {/* Tip Callout inside main dashboard card */}
         {unreviewedCount > 0 && (
-          <div className="bg-gradient-to-r from-indigo-50/50 to-white border-t border-slate-100 p-5 px-6 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/50 border-t border-amber-100/50 p-5 px-6 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex gap-4 items-center">
-              <div className="w-10 h-10 bg-white border border-indigo-100 rounded-full flex items-center justify-center shadow-sm shrink-0">
-                <Lightbulb className="w-5 h-5 text-amber-500 fill-amber-100/50" />
-              </div>
+              <motion.div 
+                initial={{ rotate: 0, scale: 1 }}
+                animate={{ rotate: [0, -25, 25, -20, 20, -10, 10, 0], scale: [1, 1.15, 1.15, 1.15, 1.15, 1.1, 1.1, 1] }}
+                transition={{ duration: 1.5, delay: 0.5, ease: "easeInOut" }}
+                className="w-10 h-10 bg-white border border-amber-200 rounded-full flex items-center justify-center shadow-sm shrink-0"
+              >
+                <Lightbulb className="w-5 h-5 text-amber-500 fill-amber-200/50" />
+              </motion.div>
               <div>
-                <h4 className="text-sm font-bold text-slate-900">Tip: Unlock historical trends</h4>
+                <h4 className="text-sm font-bold text-slate-900">Tip: Link your surveys to see trends</h4>
                 <p className="text-sm text-slate-600 mt-0.5">
-                  Link your previous surveys to see how results have changed over time. <strong className="text-indigo-900">{mappedCount} teams</strong> are auto-linked to a group in a previous survey, and <strong className="text-indigo-900">{totalCount - mappedCount}</strong> are not.
+                  Link your previous surveys to see how results have changed over time. We successfully auto-linked <strong className="text-amber-900">{mappedCount} teams</strong>, but <strong className="text-amber-900">{totalCount - mappedCount} teams</strong> still need your manual review.
                 </p>
               </div>
             </div>
             <button 
               onClick={onNavigateToLinking}
-              className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-center gap-1.5 transition-colors bg-white px-5 py-2.5 rounded-xl border border-indigo-100 shadow-sm hover:shadow hover:border-indigo-200 shrink-0"
+              className="text-sm font-bold text-amber-900 hover:text-amber-950 flex items-center justify-center gap-1.5 transition-colors bg-white px-5 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:shadow hover:border-amber-300 shrink-0"
             >
               Review links <ChevronRight className="w-4 h-4" />
             </button>
@@ -663,7 +669,7 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
                 <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center"><Activity className="w-6 h-6" /></div>
                 <div>
                   <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Previous survey links</div>
-                  <div className="text-sm text-slate-500 font-medium">{mappedCount} of {totalCount} teams handled</div>
+                  <div className="text-sm text-slate-500 font-medium">{mappedCount} of {totalCount} teams linked</div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-slate-400 font-bold text-sm group-hover:text-indigo-600 transition-colors shrink-0">
@@ -672,7 +678,7 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
             </div>
             <div className="px-8 py-5 flex items-center justify-between group cursor-pointer hover:bg-slate-50/50 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center"><BarChart className="w-6 h-6" /></div>
+                <div className="w-12 h-12 bg-white text-slate-400 rounded-2xl flex items-center justify-center border border-slate-100"><BarChart className="w-6 h-6" /></div>
                 <div>
                   <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Benchmarks</div>
                   <div className="text-sm text-slate-500 font-medium">Industry benchmarks enabled</div>
@@ -939,14 +945,16 @@ const App = () => {
   const [isTreeFilterDropdownOpen, setIsTreeFilterDropdownOpen] = useState(false);
   
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedSurvey, setSelectedSurvey] = useState("Engagement Survey 2024");
+  const [selectedSurvey, setSelectedSurvey] = useState("2025 Engagement Survey");
+  const [showSurveyLinks, setShowSurveyLinks] = useState(false);
   const [showOverview, setShowOverview] = useState(true);
   
   const previousSurveys = [
-    "Engagement Survey 2024",
-    "Engagement Survey Q3 2023",
-    "Engagement Survey Q2 2023"
+    "2025 Engagement Survey",
+    "2024 Engagement Survey",
+    "2023 Engagement Survey",
+    "2022 Engagement Survey",
+    "2021 Engagement Survey"
   ];
   
   React.useEffect(() => {
@@ -1438,7 +1446,7 @@ const App = () => {
   const progressPercentage = totalTeamsGoalCount > 0 ? Math.min(100, Math.round((totalMappedCount / totalTeamsGoalCount) * 100)) : 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900 flex">
+    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900 flex">
       {/* Sidebar */}
       <div className="w-[280px] bg-white border-r border-slate-200 shrink-0 sticky top-0 h-screen overflow-y-auto hidden md:flex flex-col">
         <div className="p-6">
@@ -1491,93 +1499,129 @@ const App = () => {
       <div className="flex-1 w-0">
         {showOverview ? (
         <SurveyOverview 
-          onNavigateToLinking={() => setShowOverview(false)} 
+          onNavigateToLinking={() => { setShowOverview(false); window.scrollTo(0, 0); }} 
           mappedCount={totalMappedCount}
           totalCount={totalTeamsGoalCount}
           unreviewedCount={getTabCount('pending') + getTabCount('under_review')}
         />
       ) : (
         <div className="max-w-5xl mx-auto py-10 px-6 pb-32 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="flex items-center gap-2 mb-8 text-indigo-600 cursor-pointer hover:text-indigo-700 transition-colors group" onClick={() => setShowOverview(true)}>
+          <div className="flex items-center gap-2 mb-8 text-indigo-600 cursor-pointer hover:text-indigo-700 transition-colors group" onClick={() => { setShowOverview(true); window.scrollTo(0, 0); }}>
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <span className="text-sm font-bold">Back to Survey Overview</span>
           </div>
 
-          <div className="mb-8 pl-1">
+          <div className="mb-6 pl-1">
             <h1 className="text-2xl font-bold text-slate-900 mb-1.5 tracking-tight">Previous survey links</h1>
-            <p className="text-slate-500 text-base leading-relaxed max-w-xl"> Link current teams to previous surveys to maintain historical trends. </p>
+            <p className="text-slate-500 text-base leading-relaxed"> Compare this survey with a previous one to see how results changed over time. First, select the survey you want to compare with. Based on that survey, we'll match your current teams so their previous results can appear in trend lines. Review any suggested changes to ensure comparisons stay accurate </p>
           </div>
 
         <div className="space-y-4">
-          {currentStep === 1 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm border-2 border-indigo-600 text-indigo-600 font-black bg-indigo-50">1</div>
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white rounded-full shadow-sm border border-slate-200 flex items-center justify-center shrink-0 text-slate-500">
+                   <Link className="w-5 h-5" />
+                </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-bold text-slate-900 mb-1">Select previous survey</h2>
-                  <p className="text-slate-500 text-sm mb-5">Choose which survey contains the historical data for your current teams.</p>
-                  
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full">
-                    <div className="relative flex-1">
-                      <select 
-                        value={selectedSurvey}
-                        onChange={(e) => setSelectedSurvey(e.target.value)}
-                        className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none pr-10 hover:border-slate-300 transition-colors cursor-pointer"
-                      >
-                        {previousSurveys.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                      <ChevronDown className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-
-                    <button 
-                      onClick={() => setCurrentStep(2)}
-                      className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                  <div className="text-sm font-medium text-slate-500 mb-0.5">Comparing with previous survey</div>
+                  <div className="relative group inline-flex items-center gap-2">
+                    <select 
+                      value={selectedSurvey}
+                      onChange={(e) => setSelectedSurvey(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     >
-                      Review group links
-                    </button>
+                      {previousSurveys.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <div className="text-lg font-bold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">
+                      {selectedSurvey}
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between hover:border-slate-300 transition-colors cursor-pointer" onClick={() => setCurrentStep(1)}>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold border-2 bg-green-50 border-green-500 text-green-600"><Check className="w-4 h-4" /></div>
-                <div><h2 className="text-base font-bold text-slate-900 leading-tight">Linked to survey</h2><p className="text-slate-500 text-sm leading-tight">{selectedSurvey}</p></div>
-              </div>
-              <button className="text-indigo-600 text-sm font-bold hover:bg-indigo-50 px-4 py-2 rounded-lg transition-colors" id="change-survey" onClick={(e) => { e.stopPropagation(); setCurrentStep(1); }}>Change</button>
-            </div>
-          )}
 
-          <div className={`bg-white rounded-2xl border ${currentStep === 1 ? 'border-slate-200 opacity-60 pointer-events-none' : 'border-slate-200 shadow-sm'} transition-all`}>
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-start gap-3">
-                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm border-2 ${currentStep === 1 ? 'bg-slate-50 border-slate-300 text-slate-400' : 'bg-white border-indigo-600 text-indigo-600 font-black'}`}>2</div>
-                <div><h2 className="text-lg font-bold text-slate-900">Review team mappings</h2><p className="text-slate-500 text-sm">{suggestions.filter(s => s.status === 'pending').length} teams waiting for confirmation.</p></div>
+              <div className="flex items-center">
+                <button 
+                  className="flex justify-center items-center gap-2 text-slate-600 font-medium text-sm hover:text-slate-900 transition-all"
+                  onClick={() => setShowSurveyLinks(!showSurveyLinks)}
+                >
+                  View survey history
+                  {showSurveyLinks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />} 
+                </button>
               </div>
-              {currentStep === 2 && <ChevronUp className="w-5 h-5 text-slate-400" />}
             </div>
 
-            {currentStep === 2 && (
-              <div className="px-5 pb-5 border-t border-slate-50 pt-3">
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8 mt-4">
-                <div className="p-5">
-                  <div className="flex justify-between items-end mb-4">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 mb-1">Mapping Progress</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mt-1.5">
-                        <strong className="text-slate-700">{totalMappedCount} teams</strong> are automatically linked to a team from the previous survey. <strong className="text-slate-700">{totalTeamsGoalCount - totalMappedCount} teams</strong> the system is not confident about and manually need to be matched.
-                      </p>
+            <AnimatePresence>
+              {showSurveyLinks && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+                  animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
+                  exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
+                >
+                  <div className="mt-6 pt-6 border-t border-slate-200">
+                    <div className="flex items-center gap-2 mb-6">
+                      <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Survey Links</h4>
+                      <div className="relative group/tooltip flex items-center justify-center">
+                        <Info className="w-4 h-4 text-slate-400 cursor-help hover:text-slate-600 transition-colors" />
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 bg-slate-900 text-white text-xs font-medium p-3 rounded-lg opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-opacity shadow-xl z-[100]">
+                          Links between consecutive surveys allow you to track team performance and engagement trends over time. We connect back as far as a continuous chain exists.
+                          <div className="absolute top-1/2 -translate-y-1/2 right-full border-4 border-transparent border-r-slate-900" />
+                        </div>
+                      </div>
                     </div>
-                    <span className={`text-2xl font-black ${progressPercentage === 100 ? 'text-green-600' : 'text-[#5850EC]'}`}>{progressPercentage}%</span>
+                    <div className="relative">
+                      {/* Vertical Line */}
+                      <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-slate-200" />
+                      
+                      <div className="space-y-6 relative z-10">
+                        <div className="flex items-center gap-4">
+                          <div className="w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-white" />
+                          <div className="font-bold text-slate-900 flex items-center gap-3">
+                            2026 Engagement Survey <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Current</span>
+                          </div>
+                        </div>
+                        
+                        {(previousSurveys.indexOf(selectedSurvey) !== -1 ? previousSurveys.slice(previousSurveys.indexOf(selectedSurvey)) : [selectedSurvey]).map((survey, idx) => (
+                          <div key={survey} className="flex items-center gap-4">
+                            <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white" />
+                            <div className="font-medium text-slate-600">
+                              {survey}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-[#E5E7EB] rounded-full h-4 overflow-hidden shadow-inner"><motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className={`${progressPercentage === 100 ? 'bg-green-500' : 'bg-[#5850EC]'} h-4 rounded-full`}></motion.div></div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm transition-all pb-2">
+            <div className="p-5 flex justify-between items-center bg-white rounded-t-2xl border-b border-indigo-100">
+              <div className="flex gap-4 items-center">
+                <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center bg-white shadow-sm border border-indigo-200 text-indigo-600`}><Network className="w-5 h-5" /></div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 leading-tight">Review group link suggestions</h2>
+                  <p className="text-slate-500 text-sm mt-0.5 leading-relaxed max-w-xl"><strong className="text-slate-700">{totalMappedCount} teams</strong> are automatically linked. <strong className="text-slate-700">{totalTeamsGoalCount - totalMappedCount} teams</strong> need your manual review.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 pt-6">
+              <div className="flex items-center gap-6 mb-6">
+                <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className={`${progressPercentage === 100 ? 'bg-green-500' : 'bg-indigo-600'} h-3 rounded-full`}></motion.div>
+                </div>
+                <div>
+                  <span className={`text-2xl font-black ${progressPercentage === 100 ? 'text-green-600' : 'text-indigo-600'}`}>{progressPercentage}%</span>
                 </div>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end border-b border-slate-200 mb-6">
-                <div className="flex gap-6">
-                  {['pending', 'under_review', 'completed'].map(tab => (
+              <div className="flex gap-6">
+              {['pending', 'under_review', 'completed'].map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
                       {tab === 'pending' ? 'Suggestions' : tab === 'under_review' ? 'Under Review' : 'Linked'} ({getTabCount(tab)})
                       {activeTab === tab && <motion.div layoutId="activeTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full" />}
@@ -1708,7 +1752,7 @@ const App = () => {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="mb-6"
                       >
-                        <div className={`bg-white rounded-2xl border transition-all duration-200 shadow-sm ${isSelected ? 'border-indigo-500 ring-4 ring-indigo-50 shadow-indigo-100' : isApproved ? 'border-green-200 bg-green-50/10 shadow-green-100/10' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <div className={`bg-slate-50 rounded-2xl border transition-all duration-200 shadow-sm ${isSelected ? 'border-indigo-500 ring-4 ring-indigo-50 shadow-indigo-100' : isApproved ? 'border-green-200 bg-green-50/10 shadow-green-100/10' : 'border-slate-200 hover:border-slate-300'}`}>
                           <div className="p-6">
                             <div className={isCompletedVisual ? "mb-4" : "mb-6"}>
                               <div className="flex items-start justify-between mb-2.5">
@@ -1771,7 +1815,7 @@ const App = () => {
 
                             {(sug.status !== 'rejected' || !isCompletedVisual) && (
                               <div className="space-y-4 mt-4">
-                                <div className="rounded-xl border bg-slate-50/50 overflow-hidden">
+                                <div className="rounded-xl border border-[#909090] bg-white overflow-hidden">
                                   <div className="px-5 py-2 border-b flex items-center justify-between bg-white/40 border-slate-200/60 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
                                     <div className="flex items-center gap-1.5"><Network className="w-3.5 h-3.5" /> {sug.structures.join(' • ')}</div>
                                     <button 
@@ -1876,7 +1920,7 @@ const App = () => {
                                               </div>
                                             </div>
                                           ))}
-                                          {!isCompletedVisual && (
+                                          {!isCompletedVisual && sug.type !== 'MERGE' && sug.type !== 'SPLIT' && (
                                             <button 
                                               onClick={() => handleAddLink(sug.id)}
                                               className="w-full flex items-center justify-center gap-2 p-2 mt-2 border border-dashed border-slate-200 rounded-xl text-xs font-bold text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
@@ -1926,13 +1970,12 @@ const App = () => {
               </AnimatePresence>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
-        </div>
-      )}
+    )}
 
-      <AnimatePresence>
+    <AnimatePresence>
         {selectedCardIds.length > 0 && (
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[100] border border-slate-800">
             <div className="flex items-center gap-3 pr-6 border-r border-slate-700"><div className="w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold shadow-inner">{selectedCardIds.length}</div> <span className="text-sm font-bold">selected</span></div>
@@ -1950,7 +1993,7 @@ const App = () => {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsTreeModalOpen(false)}></motion.div>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-              <div className="p-6 border-b shrink-0 bg-slate-50 space-y-6">
+              <div className="p-6 border-b shrink-0 bg-white space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">System Structure Mappings</h2>
@@ -2026,7 +2069,7 @@ const App = () => {
                                   {treeStatusFilter.includes(status) && <Check className="w-4 h-4" />}
                                 </button>
                               ))}
-                              <div className="p-2 bg-slate-50 border-t border-slate-100 flex gap-2">
+                              <div className="p-2 bg-white border-t border-slate-100 flex gap-2">
                                 <button 
                                   onClick={() => setTreeStatusFilter([])} 
                                   className="flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-50 rounded"
@@ -2064,7 +2107,7 @@ const App = () => {
               </div>
               <div className="flex-1 overflow-y-auto bg-white pb-10">
                 <div className="max-w-4xl mx-auto px-8 pt-8">
-                  <div className="grid grid-cols-[1fr_240px] gap-8 mb-4 px-4 py-2 bg-slate-50/80 rounded-lg border border-slate-200/60 shadow-sm">
+                  <div className="grid grid-cols-[1fr_240px] gap-8 mb-4 px-4 py-2 bg-white rounded-lg border border-slate-200/60 shadow-sm">
                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
                       <div className="w-1 h-3 bg-slate-300 rounded-full" />
                       Current Group
@@ -2105,7 +2148,7 @@ const App = () => {
                   ))
                 )}
               </div>
-              <div className="p-4 bg-slate-50 border-t flex justify-end px-6">
+              <div className="p-4 bg-white border-t flex justify-end px-6">
                 <button onClick={() => setIsTreeModalOpen(false)} className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg" id="close-tree-modal-btn">Close Structure</button>
               </div>
             </motion.div>
