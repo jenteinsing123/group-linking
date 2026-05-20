@@ -120,6 +120,19 @@ const initialTreeData = [
           { id: '1.6.1', name: 'Product Marketing', size: 22, links: [] },
           { id: '1.6.2', name: 'Brand & Growth', size: 20, links: [] }
         ]
+      },
+      {
+        id: '1.7',
+        name: 'People Operations',
+        links: [{ id: 'l-hr', name: 'Human Resources', status: 'suggested' }]
+      },
+      {
+        id: '1.8',
+        name: 'Legal & Risk',
+        links: [
+          { id: 'l-leg-1', name: 'Legal Ops', status: 'suggested' },
+          { id: 'l-leg-2', name: 'Compliance', status: 'suggested' }
+        ]
       }
     ]
   }
@@ -137,8 +150,9 @@ const geoTreeData = [
         links: [{ id: 'gl-na', name: 'Sales North America', status: 'auto' }],
         children: [
           { id: 'geo-1.1.1', name: 'NA Engineering', links: [{ id: 'gl1', name: 'Engineering', status: 'auto' }] },
-          { id: 'geo-1.1.2', name: 'NA Sales', links: [{ id: 'gl2', name: 'Sales North America', status: 'suggested' }] },
-          { id: 'geo-1.1.3', name: 'NA Customer Success', links: [{ id: 'gl-cs-1', name: 'Customer Success NA', status: 'suggested' }] }
+          { id: 'geo-1.1.2', name: 'Atlantic Enterprise Sales', links: [{ id: 'gl2', name: 'Sales North America', status: 'suggested' }, { id: 'gl-sales-eu', name: 'Sales Europe', status: 'suggested' }] },
+          { id: 'geo-1.1.3', name: 'NA Customer Success', links: [{ id: 'gl-cs-1', name: 'Customer Success NA', status: 'suggested' }] },
+          { id: 'geo-1.1.4', name: 'Americas Finance', links: [{ id: 'gl-f-1', name: 'Global Finance', status: 'suggested' }] }
         ]
       },
       {
@@ -157,7 +171,8 @@ const geoTreeData = [
         links: [{ id: 'gl-apac', name: 'Product Engineering', status: 'auto' }],
         children: [
           { id: 'geo-1.3.1', name: 'APAC Sales', links: [{ id: 'gl-sg-1', name: 'Sales North America', status: 'auto' }] },
-          { id: 'geo-1.3.2', name: 'APAC Analytics', links: [{ id: 'gl-au-1', name: 'Product Analytics', status: 'auto' }] }
+          { id: 'geo-1.3.2', name: 'APAC Analytics', links: [{ id: 'gl-au-1', name: 'Product Analytics', status: 'auto' }] },
+          { id: 'geo-1.3.3', name: 'APJ Finance', links: [{ id: 'gl-f-2', name: 'Global Finance', status: 'suggested' }] }
         ]
       }
     ]
@@ -200,7 +215,10 @@ const functionalTreeData = [
         name: 'Enablement',
         children: [
           { id: 'fun-1.3.1', name: 'Legal & Risk', links: [{ id: 'fl-l-1', name: 'Global Corp', status: 'auto' }] },
-          { id: 'fun-1.3.2', name: 'People & Culture', links: [{ id: 'fl5', name: 'Workplace Services', status: 'suggested' }] }
+          { id: 'fun-1.3.2', name: 'Workplace Experience', links: [{ id: 'fl5', name: 'Workplace Services', status: 'suggested' }] },
+          { id: 'fun-1.3.3', name: 'Operations Excellence', links: [{ id: 'fl-oe-1', name: 'Office Ops', status: 'suggested' }, { id: 'fl-oe-2', name: 'Facility Management', status: 'suggested' }] },
+          { id: 'fun-1.3.4', name: 'IT Infrastructure', links: [{ id: 'fl-it-1', name: 'Core IT', status: 'suggested' }] },
+          { id: 'fun-1.3.5', name: 'Diversity & Inclusion', links: [] }
         ]
       },
       {
@@ -427,7 +445,7 @@ const getConversationalTitle = (sug: any) => {
       ? `${newTeams[0].name} is a new team.`
       : `${newTeams[0].name} appears to be a new team, is that correct?`;
   }
-  return isApproved ? "Confirmed mapping." : "Is this mapping correct?";
+  return isApproved ? "Confirmed link." : "Is this link correct?";
 };
 
 const getSuggestionInsight = (sug: any) => {
@@ -600,7 +618,7 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
               <div>
                 <h4 className="text-sm font-bold text-slate-900">Tip: Link your surveys to see trends</h4>
                 <p className="text-sm text-slate-600 mt-0.5">
-                  Link your previous surveys to see how results have changed over time. Use the <strong className="text-amber-900 font-bold">Previous survey links</strong> section under Comparisons below to manage your historical trends and review team mappings.
+                  Link your previous surveys to see how results have changed over time. Use the <strong className="text-amber-900 font-bold">Previous survey links</strong> section under Comparisons below to manage your historical trends and review team links.
                 </p>
               </div>
             </div>
@@ -748,11 +766,19 @@ const SurveyOverview = ({ onNavigateToLinking, mappedCount, totalCount, unreview
   )
 }
 
-const UnifiedTreeNode = ({ node, level, expandedNodes, toggleNode, searchQuery, onApprove, onReject, onAdd, linkingNodeId, setLinkingNodeId, historicalTeamsDB, onSelectHistoricalTeam, onOpenEmployees }: any) => {
+const UnifiedTreeNode = ({ node, level, expandedNodes, toggleNode, searchQuery, onApprove, onReject, onAdd, linkingNodeId, setLinkingNodeId, historicalTeamsDB, onSelectHistoricalTeam, onOpenEmployees, suggestions }: any) => {
   const isSearching = !!searchQuery;
   const isExpanded = expandedNodes[node.id] !== false || isSearching;
   const hasChildren = node.children && node.children.length > 0;
-  const isMatch = searchQuery && node.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+  // Search logic identical to parent filtering match
+  const lowerQuery = searchQuery?.toLowerCase() || '';
+
+  const nodeNameLower = node.name.toLowerCase();
+  const matchesNameDirectly = searchQuery && nodeNameLower.includes(lowerQuery);
+  const matchesLinkDirectly = searchQuery && node.links?.some((l: any) => l.name.toLowerCase().includes(lowerQuery));
+  
+  const isMatch = !!searchQuery && (matchesNameDirectly || matchesLinkDirectly);
   const isLinking = linkingNodeId === node.id;
   const [localSearch, setLocalSearch] = React.useState('');
 
@@ -924,6 +950,7 @@ const UnifiedTreeNode = ({ node, level, expandedNodes, toggleNode, searchQuery, 
           historicalTeamsDB={historicalTeamsDB}
           onSelectHistoricalTeam={onSelectHistoricalTeam}
           onOpenEmployees={onOpenEmployees}
+          suggestions={suggestions}
         />
       ))}
     </>
@@ -971,6 +998,19 @@ const App = () => {
   const [treeStatusFilter, setTreeStatusFilter] = useState<string[]>([]);
   const [isTreeFilterDropdownOpen, setIsTreeFilterDropdownOpen] = useState(false);
   
+  const treeSearchInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (isTreeModalOpen) {
+      setTimeout(() => {
+        if (treeSearchInputRef.current) {
+          treeSearchInputRef.current.focus();
+          treeSearchInputRef.current.select();
+        }
+      }, 100);
+    }
+  }, [isTreeModalOpen, treeSearchQuery]);
+  
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selectedSurvey, setSelectedSurvey] = useState("2025 Engagement Survey");
   const [showSurveyLinks, setShowSurveyLinks] = useState(false);
@@ -984,11 +1024,6 @@ const App = () => {
     "2021 Engagement Survey"
   ];
   
-  React.useEffect(() => {
-    setTreeSearchQuery('');
-    setTreeLinkingNodeId(null);
-  }, [selectedTreeStructure]);
-
   // --- SYNC HELPERS ---
 
   React.useEffect(() => {
@@ -1370,7 +1405,16 @@ const App = () => {
     
     return nodes
       .map(node => {
-        const matchesName = !query || node.name.toLowerCase().includes(lowerQuery);
+        const nodeNameLower = node.name.toLowerCase();
+        
+        // Match 1: Directly matches node name
+        const matchesName = !query || nodeNameLower.includes(lowerQuery);
+        
+        // Match 2: Node links contain the query
+        const matchesLink = !query || node.links?.some((l: any) => l.name.toLowerCase().includes(lowerQuery));
+        
+        const isMatch = matchesName || matchesLink;
+
         const hasMatchingLinkStatus = node.links?.some((l: any) => {
           if (l.status === 'auto' || l.status === 'auto_linked') return statusFilter.includes('approved');
           return statusFilter.includes(l.status);
@@ -1382,7 +1426,7 @@ const App = () => {
         // If we have a query, we keep nodes that match the query OR have matching children
         // If no query, we keep nodes that match the status filter OR have matching children
         if (query) {
-          if (matchesName || hasMatchingChildren) {
+          if (isMatch || hasMatchingChildren) {
             return { ...node, children: filteredChildren };
           }
         } else {
@@ -1457,6 +1501,27 @@ const App = () => {
       return false;
     });
   }, [suggestions, activeTab, selectedStructures, getAutoMatches]);
+
+  const allSelected = React.useMemo(() => {
+    const selectable = visibleSuggestions.filter((s: any) => s.status === 'pending');
+    return selectable.length > 0 && selectable.every((sug: any) => selectedCardIds.includes(sug.id));
+  }, [visibleSuggestions, selectedCardIds]);
+
+  const changeAllSelection = React.useCallback(() => {
+    const selectable = visibleSuggestions.filter((s: any) => s.status === 'pending');
+    if (selectable.length === 0) return;
+    
+    if (allSelected) {
+      const selectableIds = selectable.map((s: any) => s.id);
+      setSelectedCardIds(prev => prev.filter(id => !selectableIds.includes(id)));
+    } else {
+      const selectableIds = selectable.map((s: any) => s.id);
+      setSelectedCardIds(prev => {
+        const union = new Set([...prev, ...selectableIds]);
+        return Array.from(union);
+      });
+    }
+  }, [visibleSuggestions, allSelected]);
 
   const getTabCount = (tab: string) => {
     if (tab === 'completed') {
@@ -1646,11 +1711,11 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end border-b border-slate-200 mb-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end border-b border-slate-200 mb-6 font-sans">
               <div className="flex gap-6">
               {['pending', 'under_review', 'completed'].map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-xs font-bold uppercase tracking-widest transition-all relative cursor-pointer ${activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                      {tab === 'pending' ? 'Suggestions' : tab === 'under_review' ? 'Under Review' : 'Linked'} ({getTabCount(tab)})
+                      {tab === 'pending' ? 'Suggestions' : tab === 'under_review' ? 'Under Review' : 'Completed'} ({getTabCount(tab)})
                       {activeTab === tab && <motion.div layoutId="activeTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full" />}
                     </button>
                   ))}
@@ -1699,7 +1764,10 @@ const App = () => {
                     )}
                   </div>
                   <button 
-                    onClick={() => setIsTreeModalOpen(true)}
+                    onClick={() => {
+                      setTreeSearchQuery('');
+                      setIsTreeModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-all shadow-sm"
                   >
                     <Network className="w-3.5 h-3.5 text-indigo-600" />
@@ -1709,6 +1777,41 @@ const App = () => {
               </div>
 
               <div className="flex flex-col">
+                {activeTab === 'completed' && getTabCount('under_review') > 0 && visibleSuggestions.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-5 bg-purple-50/40 hover:bg-purple-50/80 border border-purple-100 rounded-2xl flex items-start gap-4 transition-all group shadow-sm text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-purple-100/80 flex items-center justify-center text-purple-600 shrink-0 shadow-sm border border-purple-200">
+                      <Clock className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-black text-slate-800 tracking-tight">Outstanding reviews remaining</h4>
+                        <span className="bg-purple-100 text-purple-800 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">{getTabCount('under_review')} under review</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-semibold">
+                        You have successfully resolved {getTabCount('completed')} {getTabCount('completed') === 1 ? 'team link' : 'team links'} in this workspace. However, there {getTabCount('under_review') === 1 ? 'is' : 'are'} still {getTabCount('under_review')} {getTabCount('under_review') === 1 ? 'group' : 'groups'} awaiting colleague review before all survey connections can be fully finalized for trend analysis.
+                      </p>
+                      <button 
+                        onClick={() => setActiveTab('under_review')}
+                        className="mt-2 text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 group-hover:translate-x-0.5 transition-all cursor-pointer animate-none bg-transparent border-none p-0"
+                      >
+                        Go to Under Review <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'pending' && visibleSuggestions.length > 0 && (
+                  <div className="mb-4 flex justify-between items-center px-2 select-none">
+                    <span className="text-xs text-slate-400 font-semibold tracking-tight">
+                      Showing {visibleSuggestions.length} alignment {visibleSuggestions.length === 1 ? 'suggestion' : 'suggestions'}
+                    </span>
+                  </div>
+                )}
+
                 <AnimatePresence mode="popLayout">
                   {visibleSuggestions.length === 0 ? (
                     <motion.div 
@@ -1717,7 +1820,31 @@ const App = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-300 rounded-[2.5rem] text-center px-6"
                     >
-                      {progressPercentage === 100 && activeTab !== 'completed' ? (
+                      {activeTab === 'pending' && getTabCount('pending') === 0 && getTabCount('under_review') > 0 ? (
+                        <>
+                          <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            >
+                              <Clock className="w-10 h-10 text-purple-600 animate-pulse" />
+                            </motion.div>
+                          </div>
+                          <h3 className="text-xl font-bold text-slate-900 mb-2">Pending suggestions resolved</h3>
+                          <p className="text-slate-500 max-w-sm mx-auto leading-relaxed mb-6 font-medium">
+                            All suggestions have been acted on, but you have {getTabCount('under_review')} {getTabCount('under_review') === 1 ? 'group' : 'groups'} currently waiting under review.
+                          </p>
+                          <div className="flex gap-3">
+                            <button 
+                              onClick={() => setActiveTab('under_review')}
+                              className="bg-purple-600 hover:bg-purple-705 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-purple-200 shadow-lg cursor-pointer font-sans transition-all"
+                            >
+                              View Under Review ({getTabCount('under_review')})
+                            </button>
+                          </div>
+                        </>
+                      ) : progressPercentage === 100 && activeTab !== 'completed' ? (
                         <>
                           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
                             <motion.div
@@ -1728,32 +1855,84 @@ const App = () => {
                               <CheckCircle2 className="w-10 h-10 text-green-600" />
                             </motion.div>
                           </div>
-                          <h3 className="text-xl font-bold text-slate-900 mb-2">Structure Mapping Complete</h3>
+                          <h3 className="text-xl font-bold text-slate-900 mb-2">Survey Group Linking Complete</h3>
                           <p className="text-slate-500 max-w-sm mx-auto leading-relaxed mb-6 font-medium">
-                            You've successfully processed all suggestions. The new and old structures are now fully synchronised.
+                            You've successfully processed all suggestions. Previous and current survey groups are now connected for trend analysis.
                           </p>
                           <div className="flex gap-3">
                             <button 
-                              onClick={() => setIsTreeModalOpen(true)}
-                              className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-indigo-200 shadow-lg hover:bg-indigo-700 transition-all font-sans"
+                              onClick={() => {
+                                setTreeSearchQuery('');
+                                setIsTreeModalOpen(true);
+                              }}
+                              className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-indigo-200 shadow-lg hover:bg-indigo-700 transition-all font-sans cursor-pointer"
                             >
                               View full structure tree
                             </button>
                           </div>
+                        </>
+                      ) : activeTab === 'under_review' && getTabCount('under_review') === 0 ? (
+                        <>
+                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                            <Clock className="w-8 h-8" />
+                          </div>
+                          <h3 className="text-lg font-bold text-slate-800">No requests under review</h3>
+                          <p className="text-slate-500 text-sm mt-1 max-w-sm">
+                            {getTabCount('pending') > 0 ? (
+                              <>All reviews are complete, but there are still {getTabCount('pending')} suggestions awaiting linking.</>
+                            ) : (
+                              <>There are currently no reviews in progress or pending team linking.</>
+                            )}
+                          </p>
+                          {getTabCount('pending') > 0 && (
+                            <button 
+                              onClick={() => setActiveTab('pending')}
+                              className="mt-6 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-indigo-200 shadow-lg hover:bg-indigo-700 transition-all font-sans cursor-pointer"
+                            >
+                              Review Suggestions ({getTabCount('pending')})
+                            </button>
+                          )}
+                        </>
+                      ) : activeTab === 'completed' && getTabCount('completed') === 0 ? (
+                        <>
+                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                            <Link className="w-8 h-8" />
+                          </div>
+                          <h3 className="text-lg font-bold text-slate-800">No resolved group links yet</h3>
+                          <p className="text-slate-500 text-sm mt-1 max-w-sm">
+                            You haven't confirmed any team linking decisions yet.
+                            {getTabCount('pending') > 0 || getTabCount('under_review') > 0 ? (
+                              <>&nbsp;There are {getTabCount('pending')} suggestions ready and {getTabCount('under_review')} under review.</>
+                            ) : null}
+                          </p>
+                          {(getTabCount('pending') > 0 || getTabCount('under_review') > 0) && (
+                            <button 
+                              onClick={() => setActiveTab(getTabCount('pending') > 0 ? 'pending' : 'under_review')}
+                              className="mt-6 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-indigo-200 shadow-lg hover:bg-indigo-700 transition-all font-sans cursor-pointer"
+                            >
+                              Go to {getTabCount('pending') > 0 ? 'Suggestions' : 'Under Review'}
+                            </button>
+                          )}
                         </>
                       ) : (
                         <>
                           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
                             <Search className="w-8 h-8" />
                           </div>
-                          <h3 className="text-lg font-bold text-slate-800">All groups appear linked</h3>
+                          <h3 className="text-lg font-bold text-slate-800">
+                            {getTabCount('under_review') > 0 ? "Outstanding reviews remaining" : "All group decisions resolved"}
+                          </h3>
                           <p className="text-slate-500 text-sm mt-1 max-w-xs">
-                            It looks like all groups in this structure have been successfully mapped or don't match your active filters.
+                            {getTabCount('under_review') > 0 ? (
+                              <>There are no completed group decisions matching your active filters, but you still have {getTabCount('under_review')} {getTabCount('under_review') === 1 ? 'group' : 'groups'} awaiting colleague review.</>
+                            ) : (
+                              <>It looks like all groups in this structure have been successfully linked or don't match your active filters.</>
+                            )}
                           </p>
                           {selectedStructures.length > 0 && (
                             <button 
                               onClick={() => setSelectedStructures([])}
-                              className="mt-4 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4"
+                              className="mt-4 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4 cursor-pointer"
                             >
                               Clear all filters
                             </button>
@@ -1963,7 +2142,11 @@ const App = () => {
 
                                 {!isCompletedVisual && (
                                   <div className="flex items-center gap-2 py-1">
-                                    <p className="text-[15px] text-slate-600 leading-tight"><span className="font-bold">Note:</span> If 'Do not link', {sug.newTeams.map((t: any) => `'${t.name}'`).join(' and ')} will start without historical data.</p>
+                                    {sug.oldTeams.length > 0 ? (
+                                      <p className="text-[15px] text-slate-600 leading-tight"><span className="font-bold">Note:</span> If 'Don't link', {sug.newTeams.map((t: any) => `'${t.name}'`).join(' and ')} will start without historical data.</p>
+                                    ) : (
+                                      <p className="text-[15px] text-slate-600 leading-tight"><span className="font-bold">Note:</span> {sug.newTeams.map((t: any) => `'${t.name}'`).join(' and ')} is a new team and will start fresh without historical comparisons.</p>
+                                    )}
                                     <div className="relative group ml-1 flex items-center">
                                       <Info className="w-[18px] h-[18px] text-slate-300 cursor-help" onMouseEnter={() => setHoveredInfoId(sug.id)} onMouseLeave={() => setHoveredInfoId(null)} />
                                       <AnimatePresence>
@@ -1981,7 +2164,9 @@ const App = () => {
                                   <div className="flex items-center justify-between pt-1 border-t border-slate-50 pt-4">
                                     <button onClick={() => { setSelectedReviewId(sug.id); setReviewMessage(getConversationalTitle(sug)); setIsModalOpen(true); }} className="text-sm font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-2 group" id={`request-review-${sug.id}`}><UserPlus className="w-4 h-4 group-hover:scale-110" /> Request review</button>
                                     <div className="flex items-center gap-3">
-                                      <button onClick={() => handleAction(sug.id, 'rejected')} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer" id={`reject-${sug.id}`}>Don't link</button>
+                                      {sug.oldTeams.length > 0 && (
+                                        <button onClick={() => handleAction(sug.id, 'rejected')} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer" id={`reject-${sug.id}`}>Don't link</button>
+                                      )}
                                       <button onClick={() => handleAction(sug.id, 'approved')} className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 cursor-pointer" id={`approve-${sug.id}`}><Check className="w-4 h-4" /> Confirm</button>
                                     </div>
                                   </div>
@@ -2005,12 +2190,26 @@ const App = () => {
     <AnimatePresence>
         {selectedCardIds.length > 0 && (
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[100] border border-slate-800">
-            <div className="flex items-center gap-3 pr-6 border-r border-slate-700"><div className="w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold shadow-inner">{selectedCardIds.length}</div> <span className="text-sm font-bold">selected</span></div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => handleBulkAction('approved')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold shadow-md shadow-indigo-900/50" id="bulk-approve"><Check className="w-4 h-4 inline mr-1" strokeWidth={3} /> Confirm</button>
-              <button onClick={() => handleBulkAction('rejected')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold cursor-pointer" id="bulk-reject">Don't link</button>
+            <div className="flex items-center gap-2 text-sm text-slate-300 font-medium pr-6 border-r border-slate-700">
+              <span>Selected: <strong className="text-white font-extrabold">{selectedCardIds.length}</strong></span>
+              {activeTab === 'pending' && (
+                <>
+                  <span className="text-slate-600 font-bold mx-1">•</span>
+                  <button 
+                    onClick={changeAllSelection} 
+                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-bold underline decoration-indigo-400/30 underline-offset-4 hover:decoration-indigo-300 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
+                    id="bulk-select-all"
+                  >
+                    {allSelected ? 'Deselect all' : `Select all ${visibleSuggestions.length}`}
+                  </button>
+                </>
+              )}
             </div>
-            <button onClick={() => setSelectedCardIds([])} className="p-2 text-slate-400 hover:text-white" id="clear-selection"><X className="w-5 h-5" /></button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => handleBulkAction('rejected')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold cursor-pointer" id="bulk-reject">Don't link</button>
+              <button onClick={() => handleBulkAction('approved')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold shadow-md shadow-indigo-900/50 cursor-pointer" id="bulk-approve"><Check className="w-4 h-4 inline mr-1" strokeWidth={3} /> Confirm</button>
+            </div>
+            <button onClick={() => setSelectedCardIds([])} className="p-2 text-slate-400 hover:text-white pointer-events-auto cursor-pointer" id="clear-selection"><X className="w-5 h-5" /></button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -2023,24 +2222,40 @@ const App = () => {
               <div className="p-6 border-b shrink-0 bg-white space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">System Structure Mappings</h2>
-                    <p className="text-sm text-slate-500 font-medium">Analyze team hierarchy and linked {selectedSurvey} groups</p>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Survey Group Connections</h2>
+                    <p className="text-sm text-slate-500 font-medium font-sans">Analyze team hierarchy and linked previous survey groups for trend lines</p>
                   </div>
                   <button onClick={() => setIsTreeModalOpen(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors" id="close-tree-modal"><X className="w-6 h-6" /></button>
                 </div>
                 
                 <div className="flex flex-col lg:flex-row gap-4 items-end">
                   <div className="flex-1 space-y-1.5">
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Search Teams</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 font-sans">Search Teams</label>
                     <div className="relative">
                       <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
+                        ref={treeSearchInputRef}
                         type="text" 
                         placeholder="Find a specific team..." 
                         value={treeSearchQuery} 
                         onChange={(e) => setTreeSearchQuery(e.target.value)} 
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" 
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-sans" 
                       />
+                      {treeSearchQuery && (
+                        <button 
+                          onClick={() => {
+                            setTreeSearchQuery('');
+                            if (treeSearchInputRef.current) {
+                              treeSearchInputRef.current.focus();
+                            }
+                          }}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+                          title="Clear search to show whole tree"
+                          id="clear-tree-search"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -2122,7 +2337,11 @@ const App = () => {
                     <div className="relative">
                       <select 
                         value={selectedTreeStructure} 
-                        onChange={(e) => setSelectedTreeStructure(e.target.value)} 
+                        onChange={(e) => {
+                          setSelectedTreeStructure(e.target.value);
+                          setTreeSearchQuery('');
+                          setTreeLinkingNodeId(null);
+                        }} 
                         className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm font-bold text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-indigo-500/20"
                       >
                         {structureTypes.map(type => <option key={type} value={type}>{type}</option>)}
@@ -2171,6 +2390,7 @@ const App = () => {
                         setSelectedEmployeesGroup(group);
                         setIsEmployeeModalOpen(true);
                       }}
+                      suggestions={suggestions}
                     />
                   ))
                 )}
