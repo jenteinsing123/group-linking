@@ -1804,13 +1804,7 @@ const App = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'pending' && visibleSuggestions.length > 0 && (
-                  <div className="mb-4 flex justify-between items-center px-2 select-none">
-                    <span className="text-xs text-slate-400 font-semibold tracking-tight">
-                      Showing {visibleSuggestions.length} alignment {visibleSuggestions.length === 1 ? 'suggestion' : 'suggestions'}
-                    </span>
-                  </div>
-                )}
+
 
                 <AnimatePresence mode="popLayout">
                   {visibleSuggestions.length === 0 ? (
