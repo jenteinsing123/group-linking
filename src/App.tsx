@@ -1014,7 +1014,28 @@ const App = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selectedSurvey, setSelectedSurvey] = useState("2025 Engagement Survey");
   const [showSurveyLinks, setShowSurveyLinks] = useState(false);
-  const [showOverview, setShowOverview] = useState(true);
+  const [showOverview, setShowOverview] = useState(() => {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    return !(path === '/links' || path.endsWith('/links') || hash === '#/links' || hash === '#links');
+  });
+
+  const navigateTo = (path: string) => {
+    window.history.pushState(null, '', path);
+    setShowOverview(path !== '/links');
+    window.scrollTo(0, 0);
+  };
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      const isLinks = path === '/links' || path.endsWith('/links') || hash === '#/links' || hash === '#links';
+      setShowOverview(!isLinks);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   
   const previousSurveys = [
     "2025 Engagement Survey",
@@ -1591,21 +1612,21 @@ const App = () => {
       <div className="flex-1 w-0">
         {showOverview ? (
         <SurveyOverview 
-          onNavigateToLinking={() => { setShowOverview(false); window.scrollTo(0, 0); }} 
+          onNavigateToLinking={() => navigateTo('/links')} 
           mappedCount={totalMappedCount}
           totalCount={totalTeamsGoalCount}
           unreviewedCount={getTabCount('pending') + getTabCount('under_review')}
         />
       ) : (
         <div className="max-w-5xl mx-auto py-10 px-6 pb-32 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="flex items-center gap-2 mb-8 text-indigo-600 cursor-pointer hover:text-indigo-700 transition-colors group" onClick={() => { setShowOverview(true); window.scrollTo(0, 0); }}>
+          <div className="flex items-center gap-2 mb-8 text-indigo-600 cursor-pointer hover:text-indigo-700 transition-colors group" onClick={() => navigateTo('/')}>
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <span className="text-sm font-bold">Back to Survey Overview</span>
           </div>
 
           <div className="mb-6 pl-1">
-            <h1 className="text-2xl font-bold text-slate-900 mb-1.5 tracking-tight">Previous survey links</h1>
-            <p className="text-slate-500 text-base leading-relaxed"> Compare this survey with a previous one to see how results changed over time. First, select the survey you want to compare with. Based on that survey, we'll match your current teams so their previous results can appear in trend lines. Review any suggested changes to ensure comparisons stay accurate </p>
+            <h1 className="text-xl font-bold text-slate-900 mb-1.5 tracking-tight">Previous survey links</h1>
+            <p className="text-slate-500 text-sm leading-relaxed"> Compare this survey with a previous one to see how results changed over time. First, select the survey you want to compare with. Based on that survey, we'll match your current teams so their previous results can appear in trend lines. Review any suggested changes to ensure comparisons stay accurate </p>
           </div>
 
         <div className="space-y-4">
@@ -1825,7 +1846,7 @@ const App = () => {
                               <Clock className="w-10 h-10 text-purple-600 animate-pulse" />
                             </motion.div>
                           </div>
-                          <h3 className="text-xl font-bold text-slate-900 mb-2">Pending suggestions resolved</h3>
+                          <h3 className="text-lg font-bold text-slate-900 mb-2">Pending suggestions resolved</h3>
                           <p className="text-slate-500 max-w-sm mx-auto leading-relaxed mb-6 font-medium">
                             All suggestions have been acted on, but you have {getTabCount('under_review')} {getTabCount('under_review') === 1 ? 'group' : 'groups'} currently waiting under review.
                           </p>
@@ -1849,7 +1870,7 @@ const App = () => {
                               <CheckCircle2 className="w-10 h-10 text-green-600" />
                             </motion.div>
                           </div>
-                          <h3 className="text-xl font-bold text-slate-900 mb-2">Survey Group Linking Complete</h3>
+                          <h3 className="text-lg font-bold text-slate-900 mb-2">Survey Group Linking Complete</h3>
                           <p className="text-slate-500 max-w-sm mx-auto leading-relaxed mb-6 font-medium">
                             You've successfully processed all suggestions. Previous and current survey groups are now connected for trend analysis.
                           </p>
@@ -2003,14 +2024,14 @@ const App = () => {
                                   )}
                                 </div>
                               )}
-                              <h3 className="font-bold text-slate-900 tracking-tight leading-snug text-xl">
+                              <h3 className="font-bold text-slate-900 tracking-tight leading-snug text-lg">
                                 {sug.oldTeams.length === 0 || sug.status === 'rejected' ? (
                                   <span><span className="text-slate-400 font-medium">New Team:</span> {sug.newTeams[0].name}</span>
                                 ) : (
                                   getConversationalTitle(sug)
                                 )}
                               </h3>
-                              {!isCompletedVisual && <p className="text-base text-slate-500 mt-1.5 leading-relaxed">{getSuggestionInsight(sug)}</p>}
+                              {!isCompletedVisual && <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">{getSuggestionInsight(sug)}</p>}
                             </div>
 
                             {(sug.status !== 'rejected' || !isCompletedVisual) && (
